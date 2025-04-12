@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import LandingPage from "./pages/LandingPage";
 import ContactPage from "./pages/ContactPage";
@@ -23,11 +22,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <UserProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <Router>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -36,29 +35,32 @@ const App = () => (
             <Route path="/register" element={<RegisterPage />} />
 
             {/* Super Admin Routes */}
-            <Route path="/super-admin" element={<SuperAdminDashboard />} />
-            <Route path="/super-admin/clinics" element={<ClinicPage />} />
-            <Route path="/super-admin/reports" element={<ReportsPage />} />
-            <Route path="/super-admin/settings" element={<SettingsPage />} />
+            <Route path="/SuperAdmin" element={<SuperAdminDashboard />} />
+            <Route path="/SuperAdmin/clinics" element={<ClinicPage />} />
+            <Route path="/SuperAdmin/reports" element={<ReportsPage />} />
+            <Route path="/SuperAdmin/settings" element={<SettingsPage />} />
 
             {/* Sub Admin Routes */}
-            <Route path="/sub-admin" element={<SubAdminDashboard />} />
-            <Route path="/sub-admin/clinics" element={<ClinicPage />} />
-            <Route path="/sub-admin/payments" element={<PaymentsPage />} />
-            <Route path="/sub-admin/reports" element={<ReportsPage />} />
-            <Route path="/sub-admin/settings" element={<SettingsPage />} />
+            <Route path="/SubAdmin" element={<SubAdminDashboard />} />
+            <Route path="/SubAdmin/clinics" element={<ClinicPage />} />
+            <Route path="/SubAdmin/payments" element={<PaymentsPage />} />
+            <Route path="/SubAdmin/reports" element={<ReportsPage />} />
+            <Route path="/SubAdmin/settings" element={<SettingsPage />} />
 
             {/* Secretary Routes */}
-            <Route path="/secretary" element={<SecretaryDashboard />} />
-            <Route path="/secretary/appointments" element={<AppointmentsPage />} />
-            <Route path="/secretary/settings" element={<SettingsPage />} />
+            <Route path="/Secretary" element={<SecretaryDashboard />} />
+            <Route
+              path="/Secretary/appointments"
+              element={<AppointmentsPage />}
+            />
+            <Route path="/Secretary/settings" element={<SettingsPage />} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </UserProvider>
+        </TooltipProvider>
+      </UserProvider>
+    </Router>
   </QueryClientProvider>
 );
 

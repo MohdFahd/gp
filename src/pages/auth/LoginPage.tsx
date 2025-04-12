@@ -17,116 +17,92 @@ const LoginPage = () => {
     password: "",
   });
 
-  // Set default email if switching roles
-  useEffect(() => {
-    if (requestedRole) {
-      // Pre-fill the email field based on the requested role
-      if (requestedRole === "super-admin") {
-        setFormData((prev) => ({ ...prev, email: "admin@clinic.com" }));
-      } else if (requestedRole === "sub-admin") {
-        setFormData((prev) => ({ ...prev, email: "subadmin@clinic.com" }));
-      } else if (requestedRole === "secretary") {
-        setFormData((prev) => ({ ...prev, email: "secretary@clinic.com" }));
-      }
-    }
-  }, [requestedRole]);
-
-  // If authenticated and no role switch is requested, redirect to dashboard
-  useEffect(() => {
-    if (isAuthenticated && user && !requestedRole) {
-      navigate(`/${user.role}`);
-    }
-  }, [isAuthenticated, user, requestedRole, navigate]);
+  // useEffect(() => {
+  //   if (isAuthenticated && user && !requestedRole) {
+  //     navigate(`/${user.role}`);
+  //   }
+  // }, [isAuthenticated, user, requestedRole, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // // If authenticated and no role switch is requested, redirect to dashboard
+  // useEffect(() => {
+  //   if (isAuthenticated && user && !requestedRole) {
+  //     navigate(`/${user?.role[0]}`);
+  //   }
+  // }, [isAuthenticated, user, requestedRole, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const response = await apiPost("/auth/login", {
-      email: formData.email,
-      password: formData.password,
-    });
-    toast({
-      title: "تم إرسال الطلب",
-      description: response.message || "سيتم مراجعة طلبك والرد عليه قريباً",
-    });
 
-    navigate("/login");
     try {
-      // Simulate login - in a real app this would be an API call
-      const demoUsers = {
-        "admin@clinic.com": {
-          id: "1",
-          name: "أحمد محمد",
-          email: "admin@clinic.com",
-          role: "super-admin" as const,
-          avatar:
-            "https://ui-avatars.com/api/?name=أحمد+محمد&background=0D8ABC&color=fff",
-        },
-        "subadmin@clinic.com": {
-          id: "2",
-          name: "محمد علي",
-          email: "subadmin@clinic.com",
-          role: "sub-admin" as const,
-          avatar:
-            "https://ui-avatars.com/api/?name=محمد+علي&background=06B6D4&color=fff",
-        },
-        "secretary@clinic.com": {
-          id: "3",
-          name: "سارة أحمد",
-          email: "secretary@clinic.com",
-          role: "secretary" as const,
-          avatar:
-            "https://ui-avatars.com/api/?name=سارة+أحمد&background=0EA5E9&color=fff",
-        },
-      };
+      const response = await apiPost("/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-      setTimeout(() => {
-        // Check if this is a demo user
-        const user = demoUsers[formData.email as keyof typeof demoUsers];
-
-        if (user && formData.password === "password") {
-          // Clear the requested role as we're now logging in
-          setRequestedRole(null);
-          setUser(user);
-
-          navigate(`/${user.role}`);
+      toast({
+        title: "تم إرسال الطلب",
+        description: response.message || "سيتم مراجعة طلبك والرد عليه قريباً",
+      });
+      if (response?.success) {
+        setUser(response.data.user);
+        console.log("User data:", response.data.user);
+        // Optional: update requestedRole if needed
+        const roles = response?.data?.user.roles;
+        if (Array.isArray(roles) && roles.length > 0) {
+          const role = roles[0];
+          if (role === "SuperAdmin") {
+            setRequestedRole("SuperAdmin");
+            navigate(`/SuperAdmin`);
+          } else if (role === "Patient") {
+            setRequestedRole("Patient");
+            navigate(`/Patient`);
+          } else if (role === "SubAdmin") {
+            setRequestedRole("SubAdmin");
+            navigate(`/SubAdmin`);
+          }
+          navigate(`/${role}`);
+        } else {
           toast({
-            title: "تم تسجيل الدخول بنجاح",
-            description: `مرحباً بك ${user.name}`,
+            title: "خطأ",
+            description: response.message || "تعذر تسجيل الدخول",
+            variant: "destructive",
           });
         }
-        setLoading(false);
-      }, 1000);
+      }
     } catch (error) {
+      console.error("Login Error:", error);
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الدخول",
+        description:
+          error instanceof Error
+            ? error.message
+            : "تعذر تسجيل الدخول. الرجاء المحاولة لاحقاً.",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
 
-  // Role switching message
   const roleSwitchingMessage = requestedRole && (
     <div className="bg-yellow-50 border border-yellow-200 p-3 rounded mt-4 mb-4">
       <p className="text-sm text-yellow-800">
         يرجى إدخال بيانات الدخول للحساب{" "}
-        {requestedRole === "super-admin"
+        {requestedRole === "SuperAdmin"
           ? "المدير العام"
-          : requestedRole === "sub-admin"
+          : requestedRole === "SubAdmin"
           ? "المدير الفرعي"
           : "السكرتير"}
       </p>
     </div>
   );
 
-  // Add some demo instructions
   const demoInstructions = (
     <div className="bg-blue-50 border border-blue-200 p-3 rounded mt-4">
       <p className="text-sm text-blue-800 mb-1">
@@ -135,7 +111,7 @@ const LoginPage = () => {
       <ul className="text-xs text-blue-600">
         <li>مدير عام: admin@clinic.com / password</li>
         <li>مدير فرعي: subadmin@clinic.com / password</li>
-        <li>سكرتير: secretary@clinic.com / password</li>
+        <li>سكرتير: Secretary@clinic.com / password</li>
       </ul>
     </div>
   );
@@ -154,7 +130,14 @@ const LoginPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">أدخل بيانات حسابك</CardTitle>
+            <CardTitle
+              className="text-center"
+              onClick={() => {
+                console.log(user);
+              }}
+            >
+              أدخل بيانات حسابك
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {roleSwitchingMessage}
