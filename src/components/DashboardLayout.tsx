@@ -106,7 +106,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // if (!user || !Array.isArray(user.role)) {
   //   return null;
   // }
-  const role = user?.roles?.[0] || ""; // Default to SuperAdmin if no role is found
+  const role = user?.roles?.[0] || "SuperAdmin"; // Default to SuperAdmin if no role is found
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const navItems: NavItem[] = [
@@ -123,18 +123,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       role: ["SuperAdmin", "SubAdmin"],
     },
     {
-      label: "المواعيد",
-      icon: Calendar,
-      href: `/${role}/appointments`,
-      role: ["Secretary"],
-    },
-    {
-      label: "المدفوعات",
-      icon: CreditCard,
-      href: `/${role}/payments`,
-      role: ["SubAdmin"],
-    },
-    {
       label: "التقارير",
       icon: BarChart3,
       href: `/${role}/reports`,
@@ -146,10 +134,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       href: `/${role}/settings`,
       role: ["SuperAdmin", "SubAdmin", "Secretary"],
     },
+    {
+      label: "المواعيد",
+      icon: Calendar,
+      href: `/${role}/appointments`,
+      role: ["Secretary"],
+    },
+    {
+      label: "المدفوعات",
+      icon: CreditCard,
+      href: `/${role}/payments`,
+      role: ["SubAdmin"],
+    },
   ];
 
   const filteredNavItems = navItems.filter(
-    (item) => !item.role || item.role.includes(role)
+    (item) => item.role && item.role.includes(role)
   );
 
   const handleSidebarToggle = () => {
@@ -242,7 +242,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
           <ScrollArea className="flex-1 py-4">
             <nav className="px-4 space-y-1">
-              {navItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -303,7 +303,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
             <ScrollArea className="flex-1 py-4">
               <nav className="px-4 space-y-1">
-                {navItems.map((item) => (
+                {filteredNavItems.map((item) => (
                   <SheetClose asChild key={item.href}>
                     <Link
                       to={item.href}
