@@ -106,7 +106,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // if (!user || !Array.isArray(user.role)) {
   //   return null;
   // }
-  const role = user?.role?.[0] || ""; // Default to SuperAdmin if no role is found
+  const role = user?.roles?.[0] || ""; // Default to SuperAdmin if no role is found
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const navItems: NavItem[] = [
@@ -147,9 +147,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       role: ["SuperAdmin", "SubAdmin", "Secretary"],
     },
   ];
-  useEffect(() => {
-    console.log("User role changed:", role);
-  }, [user]);
+
   const filteredNavItems = navItems.filter(
     (item) => !item.role || item.role.includes(role)
   );
@@ -244,7 +242,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
           <ScrollArea className="flex-1 py-4">
             <nav className="px-4 space-y-1">
-              {filteredNavItems.map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -305,7 +303,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
             <ScrollArea className="flex-1 py-4">
               <nav className="px-4 space-y-1">
-                {filteredNavItems.map((item) => (
+                {navItems.map((item) => (
                   <SheetClose asChild key={item.href}>
                     <Link
                       to={item.href}

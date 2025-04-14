@@ -1,3 +1,4 @@
+import { apiGet } from "@/utils/api";
 import React, {
   createContext,
   useContext,
@@ -80,6 +81,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [requestedRole, setRequestedRole] = useState<UserRole | null>(null);
+  interface Clinic {
+    id: string;
+    name: string;
+    doctorName: string;
+    specialization: string;
+  }
+
+  const [clinics, setClinics] = useState<Clinic[]>([]);
   const navigate = useNavigate();
   // Check for saved user on component mount
   useEffect(() => {
@@ -114,7 +123,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       localStorage.removeItem("clinicUser");
     }
   }, [user]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiGet("/SuperAdmin/all-clinics");
+        setClinics(response.data);
+        console.log("Clinics data fetched successfully:", clinics);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
 
+    fetchData();
+  }, []);
   // Save notifications to localStorage when they change
   useEffect(() => {
     localStorage.setItem("userNotifications", JSON.stringify(notifications));
@@ -173,7 +194,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     if (!query.trim()) return [];
 
     // Get data from localStorage
-    const clinics = JSON.parse(localStorage.getItem("clinics") || "[]");
+
     const appointments = JSON.parse(
       localStorage.getItem("appointments") || "[]"
     );

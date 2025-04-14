@@ -2,10 +2,11 @@ import APP_URL from "@/constants";
 
 export const apiGet = async (url: string) => {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(APP_URL + url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: "bearer " + localStorage.getItem("token"),
       },
       mode: "cors",
     });
@@ -27,6 +28,7 @@ export const apiPost = async (url: string, body: object) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: "bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify(body),
       mode: "cors",
@@ -45,7 +47,7 @@ export const apiPost = async (url: string, body: object) => {
 
 export const apiPut = async (url: string, body: object) => {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(APP_URL + url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -67,7 +69,7 @@ export const apiPut = async (url: string, body: object) => {
 
 export const apiDelete = async (url: string) => {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(APP_URL + url, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

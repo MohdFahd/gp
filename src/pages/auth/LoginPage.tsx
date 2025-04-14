@@ -51,6 +51,7 @@ const LoginPage = () => {
       });
       if (response?.success) {
         setUser(response.data.user);
+        localStorage.setItem("token", response.data.token);
         console.log("User data:", response.data.user);
         // Optional: update requestedRole if needed
         const roles = response?.data?.user.roles;

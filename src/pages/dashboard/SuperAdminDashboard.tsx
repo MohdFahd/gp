@@ -1,30 +1,39 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DashboardLayout from '@/components/DashboardLayout';
-import { 
-  Building, CalendarCheck, Users, ArrowUp, ArrowDown, 
-  Check, PlusCircle, X, Pencil, Trash2, Image 
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DashboardLayout from "@/components/DashboardLayout";
+import {
+  Building,
+  CalendarCheck,
+  Users,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  PlusCircle,
+  X,
+  Pencil,
+  Trash2,
+  Image,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-} from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +41,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { apiGet, apiPost } from "@/utils/api";
 
 interface Specialization {
   id: string;
@@ -46,92 +63,189 @@ interface Specialization {
 }
 
 const SuperAdminDashboard = () => {
-  const stats = [
-    { 
-      title: 'إجمالي العيادات', 
-      value: 48, 
-      change: 12, 
-      changeType: 'increase',
+  const [stats, setStats] = useState([
+    {
+      title: "إجمالي العيادات",
+      value: 0,
+      change: 0,
+      changeType: "increase",
       icon: Building,
-      iconColor: 'text-clinic-primary bg-clinic-light' 
+      iconColor: "text-clinic-primary bg-clinic-light",
     },
-    { 
-      title: 'عدد المواعيد اليوم', 
-      value: 124, 
-      change: 8, 
-      changeType: 'increase',
+    {
+      title: "عدد المواعيد اليوم",
+      value: 0,
+      change: 0,
+      changeType: "increase",
       icon: CalendarCheck,
-      iconColor: 'text-green-600 bg-green-100' 
+      iconColor: "text-green-600 bg-green-100",
     },
-    { 
-      title: 'عدد المستخدمين', 
-      value: 865, 
-      change: -3, 
-      changeType: 'decrease',
+    {
+      title: "عدد المستخدمين",
+      value: 0,
+      change: 0,
+      changeType: "decrease",
       icon: Users,
-      iconColor: 'text-blue-600 bg-blue-100' 
+      iconColor: "text-blue-600 bg-blue-100",
     },
-  ];
-
-  const pendingClinics = [
-    { 
-      id: 1,
-      name: 'عيادة الأمل',
-      specialization: 'طب الأسنان',
-      owner: 'د. محمد أحمد',
-      date: '2025-03-15',
-      status: 'pending'
-    },
-    { 
-      id: 2,
-      name: 'مركز الحياة الطبي',
-      specialization: 'جراحة عامة',
-      owner: 'د. سارة الخالد',
-      date: '2025-03-14',
-      status: 'pending'
-    },
-    { 
-      id: 3,
-      name: 'عيادة الشفاء',
-      specialization: 'أمراض القلب',
-      owner: 'د. أحمد العلي',
-      date: '2025-03-12',
-      status: 'pending'
-    },
-  ];
-
-  const [availableSpecializations, setAvailableSpecializations] = useState<Specialization[]>([
-    { id: '1', name: 'طب الأسنان', active: true, description: 'علاج وصيانة الأسنان واللثة', imageUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=250' },
-    { id: '2', name: 'جلدية', active: true, description: 'علاج الأمراض الجلدية والتجميل', imageUrl: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=250' },
-    { id: '3', name: 'باطنة', active: true, description: 'علاج الأمراض الداخلية' },
-    { id: '4', name: 'أمراض القلب', active: true, description: 'تشخيص وعلاج أمراض القلب والأوعية الدموية' },
-    { id: '5', name: 'عيون', active: true, description: 'فحص وعلاج أمراض العيون وتصحيح النظر' },
-    { id: '6', name: 'أنف وأذن وحنجرة', active: true, description: 'علاج مشاكل الأنف والأذن والحنجرة' },
-    { id: '7', name: 'عظام', active: true, description: 'علاج كسور وأمراض العظام والمفاصل' },
-    { id: '8', name: 'أمراض النساء والتوليد', active: true, description: 'رعاية صحة المرأة والحمل والولادة' },
-    { id: '9', name: 'أطفال', active: false, description: 'رعاية صحة الأطفال ونموهم' },
-    { id: '10', name: 'نفسية', active: false, description: 'تشخيص وعلاج الاضطرابات النفسية' },
   ]);
 
-  const [filterActive, setFilterActive] = useState('all');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiGet("/SuperAdmin/dashboard");
+        const { clinicsCount, appointmentsToday, usersCount } = response;
+
+        setStats([
+          {
+            title: "إجمالي العيادات",
+            value: clinicsCount,
+            change: 12, // Example change value
+            changeType: clinicsCount > 48 ? "increase" : "decrease",
+            icon: Building,
+            iconColor: "text-clinic-primary bg-clinic-light",
+          },
+          {
+            title: "عدد المواعيد اليوم",
+            value: appointmentsToday,
+            change: 8, // Example change value
+            changeType: appointmentsToday > 124 ? "increase" : "decrease",
+            icon: CalendarCheck,
+            iconColor: "text-green-600 bg-green-100",
+          },
+          {
+            title: "عدد المستخدمين",
+            value: usersCount,
+            change: -3, // Example change value
+            changeType: usersCount > 865 ? "increase" : "decrease",
+            icon: Users,
+            iconColor: "text-blue-600 bg-blue-100",
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const pendingClinics = [
+    {
+      id: 1,
+      name: "عيادة الأمل",
+      specialization: "طب الأسنان",
+      owner: "د. محمد أحمد",
+      date: "2025-03-15",
+      status: "pending",
+    },
+    {
+      id: 2,
+      name: "مركز الحياة الطبي",
+      specialization: "جراحة عامة",
+      owner: "د. سارة الخالد",
+      date: "2025-03-14",
+      status: "pending",
+    },
+    {
+      id: 3,
+      name: "عيادة الشفاء",
+      specialization: "أمراض القلب",
+      owner: "د. أحمد العلي",
+      date: "2025-03-12",
+      status: "pending",
+    },
+  ];
+
+  const [availableSpecializations, setAvailableSpecializations] = useState<
+    Specialization[]
+  >([
+    {
+      id: "1",
+      name: "طب الأسنان",
+      active: true,
+      description: "علاج وصيانة الأسنان واللثة",
+      imageUrl:
+        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=250",
+    },
+    {
+      id: "2",
+      name: "جلدية",
+      active: true,
+      description: "علاج الأمراض الجلدية والتجميل",
+      imageUrl:
+        "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=250",
+    },
+    {
+      id: "3",
+      name: "باطنة",
+      active: true,
+      description: "علاج الأمراض الداخلية",
+    },
+    {
+      id: "4",
+      name: "أمراض القلب",
+      active: true,
+      description: "تشخيص وعلاج أمراض القلب والأوعية الدموية",
+    },
+    {
+      id: "5",
+      name: "عيون",
+      active: true,
+      description: "فحص وعلاج أمراض العيون وتصحيح النظر",
+    },
+    {
+      id: "6",
+      name: "أنف وأذن وحنجرة",
+      active: true,
+      description: "علاج مشاكل الأنف والأذن والحنجرة",
+    },
+    {
+      id: "7",
+      name: "عظام",
+      active: true,
+      description: "علاج كسور وأمراض العظام والمفاصل",
+    },
+    {
+      id: "8",
+      name: "أمراض النساء والتوليد",
+      active: true,
+      description: "رعاية صحة المرأة والحمل والولادة",
+    },
+    {
+      id: "9",
+      name: "أطفال",
+      active: false,
+      description: "رعاية صحة الأطفال ونموهم",
+    },
+    {
+      id: "10",
+      name: "نفسية",
+      active: false,
+      description: "تشخيص وعلاج الاضطرابات النفسية",
+    },
+  ]);
+
+  const [filterActive, setFilterActive] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentSpecialization, setCurrentSpecialization] = useState<Specialization | null>(null);
+  const [currentSpecialization, setCurrentSpecialization] =
+    useState<Specialization | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const form = useForm({
     defaultValues: {
-      specName: '',
+      specName: "",
     },
   });
 
   const editForm = useForm({
     defaultValues: {
-      id: '',
-      name: '',
-      description: '',
+      id: "",
+      name: "",
+      description: "",
       active: true,
-      imageUrl: '',
+      imageUrl: "",
     },
   });
 
@@ -142,17 +256,19 @@ const SuperAdminDashboard = () => {
       )
     );
 
-    const spec = availableSpecializations.find(spec => spec.id === id);
+    const spec = availableSpecializations.find((spec) => spec.id === id);
     if (spec) {
       toast({
         title: spec.active ? "تم تعطيل التخصص" : "تم تفعيل التخصص",
-        description: `تم ${spec.active ? "تعطيل" : "تفعيل"} تخصص ${spec.name} بنجاح`,
+        description: `تم ${spec.active ? "تعطيل" : "تفعيل"} تخصص ${
+          spec.name
+        } بنجاح`,
       });
     }
   };
 
   const handleAddSpecialization = () => {
-    if (form.getValues().specName.trim() === '') {
+    if (form.getValues().specName.trim() === "") {
       toast({
         title: "خطأ",
         description: "الرجاء إدخال اسم التخصص",
@@ -161,9 +277,13 @@ const SuperAdminDashboard = () => {
       return;
     }
 
-    if (availableSpecializations.some(
-      spec => spec.name.toLowerCase() === form.getValues().specName.trim().toLowerCase()
-    )) {
+    if (
+      availableSpecializations.some(
+        (spec) =>
+          spec.name.toLowerCase() ===
+          form.getValues().specName.trim().toLowerCase()
+      )
+    ) {
       toast({
         title: "خطأ",
         description: "هذا التخصص موجود بالفعل",
@@ -175,11 +295,11 @@ const SuperAdminDashboard = () => {
     const newId = (availableSpecializations.length + 1).toString();
     setAvailableSpecializations([
       ...availableSpecializations,
-      { id: newId, name: form.getValues().specName.trim(), active: true }
+      { id: newId, name: form.getValues().specName.trim(), active: true },
     ]);
-    
+
     form.reset();
-    
+
     toast({
       title: "تم إضافة التخصص",
       description: `تم إضافة تخصص ${form.getValues().specName} بنجاح`,
@@ -187,7 +307,7 @@ const SuperAdminDashboard = () => {
   };
 
   const onSubmit = (data: { specName: string }) => {
-    if (data.specName.trim() === '') {
+    if (data.specName.trim() === "") {
       toast({
         title: "خطأ",
         description: "الرجاء إدخال اسم التخصص",
@@ -196,9 +316,11 @@ const SuperAdminDashboard = () => {
       return;
     }
 
-    if (availableSpecializations.some(
-      spec => spec.name.toLowerCase() === data.specName.trim().toLowerCase()
-    )) {
+    if (
+      availableSpecializations.some(
+        (spec) => spec.name.toLowerCase() === data.specName.trim().toLowerCase()
+      )
+    ) {
       toast({
         title: "خطأ",
         description: "هذا التخصص موجود بالفعل",
@@ -210,21 +332,21 @@ const SuperAdminDashboard = () => {
     const newId = (availableSpecializations.length + 1).toString();
     setAvailableSpecializations([
       ...availableSpecializations,
-      { id: newId, name: data.specName.trim(), active: true }
+      { id: newId, name: data.specName.trim(), active: true },
     ]);
-    
+
     form.reset();
-    
+
     toast({
       title: "تم إضافة التخصص",
       description: `تم إضافة تخصص ${data.specName} بنجاح`,
     });
   };
 
-  const filteredSpecializations = availableSpecializations.filter(spec => {
-    if (filterActive === 'all') return true;
-    if (filterActive === 'active') return spec.active;
-    if (filterActive === 'inactive') return !spec.active;
+  const filteredSpecializations = availableSpecializations.filter((spec) => {
+    if (filterActive === "all") return true;
+    if (filterActive === "active") return spec.active;
+    if (filterActive === "inactive") return !spec.active;
     return true;
   });
 
@@ -233,9 +355,9 @@ const SuperAdminDashboard = () => {
     editForm.reset({
       id: specialization.id,
       name: specialization.name,
-      description: specialization.description || '',
+      description: specialization.description || "",
       active: specialization.active,
-      imageUrl: specialization.imageUrl || '',
+      imageUrl: specialization.imageUrl || "",
     });
     setImagePreview(specialization.imageUrl || null);
     setIsDialogOpen(true);
@@ -253,7 +375,7 @@ const SuperAdminDashboard = () => {
       reader.onloadend = () => {
         const result = reader.result as string;
         setImagePreview(result);
-        editForm.setValue('imageUrl', result);
+        editForm.setValue("imageUrl", result);
       };
       reader.readAsDataURL(file);
     }
@@ -262,19 +384,21 @@ const SuperAdminDashboard = () => {
   const handleSaveEdit = (data: any) => {
     setAvailableSpecializations(
       availableSpecializations.map((spec) =>
-        spec.id === data.id ? { 
-          ...spec, 
-          name: data.name,
-          description: data.description,
-          imageUrl: imagePreview || spec.imageUrl,
-          active: data.active 
-        } : spec
+        spec.id === data.id
+          ? {
+              ...spec,
+              name: data.name,
+              description: data.description,
+              imageUrl: imagePreview || spec.imageUrl,
+              active: data.active,
+            }
+          : spec
       )
     );
 
     setIsDialogOpen(false);
     setImagePreview(null);
-    
+
     toast({
       title: "تم تحديث التخصص",
       description: `تم تحديث تخصص ${data.name} بنجاح`,
@@ -284,14 +408,16 @@ const SuperAdminDashboard = () => {
   const handleConfirmDelete = () => {
     if (currentSpecialization) {
       setAvailableSpecializations(
-        availableSpecializations.filter((spec) => spec.id !== currentSpecialization.id)
+        availableSpecializations.filter(
+          (spec) => spec.id !== currentSpecialization.id
+        )
       );
-      
+
       toast({
         title: "تم حذف التخصص",
         description: `تم حذف تخصص ${currentSpecialization.name} بنجاح`,
       });
-      
+
       setIsDeleteDialogOpen(false);
       setCurrentSpecialization(null);
     }
@@ -302,7 +428,10 @@ const SuperAdminDashboard = () => {
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold">لوحة تحكم المدير العام</h1>
-          <p className="text-gray-500">مرحبًا بك في لوحة تحكم المدير العام، يمكنك الاطلاع على إحصائيات النظام</p>
+          <p className="text-gray-500">
+            مرحبًا بك في لوحة تحكم المدير العام، يمكنك الاطلاع على إحصائيات
+            النظام
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -311,19 +440,10 @@ const SuperAdminDashboard = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-gray-500 mb-1">{stat.title}</div>
-                    <div className="text-3xl font-bold">{stat.value}</div>
-                    <div className="flex items-center mt-1 space-x-1 space-x-reverse">
-                      {stat.changeType === 'increase' ? (
-                        <ArrowUp className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDown className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={`text-sm ${stat.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
-                        {Math.abs(stat.change)}%
-                      </span>
-                      <span className="text-sm text-gray-500">من الشهر السابق</span>
+                    <div className="text-sm font-medium text-gray-500 mb-1">
+                      {stat.title}
                     </div>
+                    <div className="text-3xl font-bold">{stat.value}</div>
                   </div>
                   <div className={`p-3 rounded-full ${stat.iconColor}`}>
                     <stat.icon className="h-6 w-6" />
@@ -343,7 +463,10 @@ const SuperAdminDashboard = () => {
               <div className="bg-gray-50 p-4 rounded-md">
                 <h3 className="text-lg font-semibold mb-3">إضافة تخصص جديد</h3>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-wrap gap-3 items-end">
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="flex flex-wrap gap-3 items-end"
+                  >
                     <FormField
                       control={form.control}
                       name="specName"
@@ -365,10 +488,7 @@ const SuperAdminDashboard = () => {
 
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium">تصفية:</span>
-                <Select
-                  value={filterActive}
-                  onValueChange={setFilterActive}
-                >
+                <Select value={filterActive} onValueChange={setFilterActive}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="الحالة" />
                   </SelectTrigger>
@@ -395,11 +515,16 @@ const SuperAdminDashboard = () => {
                   <TableBody>
                     {filteredSpecializations.map((spec, index) => (
                       <TableRow key={spec.id}>
-                        <TableCell className="text-right">{index + 1}</TableCell>
+                        <TableCell className="text-right">
+                          {index + 1}
+                        </TableCell>
                         <TableCell>
                           <Avatar className="w-10 h-10">
                             {spec.imageUrl ? (
-                              <AvatarImage src={spec.imageUrl} alt={spec.name} />
+                              <AvatarImage
+                                src={spec.imageUrl}
+                                alt={spec.name}
+                              />
                             ) : (
                               <AvatarFallback className="bg-gray-200">
                                 <Image className="h-4 w-4 text-gray-500" />
@@ -407,7 +532,9 @@ const SuperAdminDashboard = () => {
                             )}
                           </Avatar>
                         </TableCell>
-                        <TableCell className="font-medium text-right">{spec.name}</TableCell>
+                        <TableCell className="font-medium text-right">
+                          {spec.name}
+                        </TableCell>
                         <TableCell className="text-right text-sm text-gray-500">
                           {spec.description && spec.description.length > 30
                             ? `${spec.description.substring(0, 30)}...`
@@ -417,7 +544,9 @@ const SuperAdminDashboard = () => {
                           <Badge
                             variant="outline"
                             className={`${
-                              spec.active ? "bg-green-100 text-green-800 border-green-300" : "bg-red-100 text-red-800 border-red-300"
+                              spec.active
+                                ? "bg-green-100 text-green-800 border-green-300"
+                                : "bg-red-100 text-red-800 border-red-300"
                             }`}
                           >
                             {spec.active ? "نشط" : "غير نشط"}
@@ -436,7 +565,9 @@ const SuperAdminDashboard = () => {
                             <Button
                               variant={spec.active ? "destructive" : "default"}
                               size="sm"
-                              onClick={() => handleToggleSpecialization(spec.id)}
+                              onClick={() =>
+                                handleToggleSpecialization(spec.id)
+                              }
                               className="h-8 gap-1"
                             >
                               {spec.active ? (
@@ -464,8 +595,16 @@ const SuperAdminDashboard = () => {
 
                     {filteredSpecializations.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center text-gray-500">
-                          لا توجد تخصصات {filterActive === 'active' ? 'نشطة' : filterActive === 'inactive' ? 'معطلة' : ''}
+                        <TableCell
+                          colSpan={6}
+                          className="h-24 text-center text-gray-500"
+                        >
+                          لا توجد تخصصات{" "}
+                          {filterActive === "active"
+                            ? "نشطة"
+                            : filterActive === "inactive"
+                            ? "معطلة"
+                            : ""}
                         </TableCell>
                       </TableRow>
                     )}
@@ -480,11 +619,12 @@ const SuperAdminDashboard = () => {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>تعديل التخصص</DialogTitle>
-              <DialogDescription>
-                قم بتعديل بيانات التخصص
-              </DialogDescription>
+              <DialogDescription>قم بتعديل بيانات التخصص</DialogDescription>
             </DialogHeader>
-            <form onSubmit={editForm.handleSubmit(handleSaveEdit)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleSaveEdit)}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium">
@@ -497,7 +637,7 @@ const SuperAdminDashboard = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <label htmlFor="description" className="text-sm font-medium">
                     وصف التخصص
@@ -511,17 +651,15 @@ const SuperAdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    صورة التخصص
-                  </label>
+                  <label className="text-sm font-medium">صورة التخصص</label>
                   <div className="flex items-start gap-4">
                     <div className="border border-dashed rounded-md p-4 flex flex-col items-center justify-center">
                       {imagePreview ? (
                         <div className="relative w-32 h-32">
-                          <img 
-                            src={imagePreview} 
-                            alt="Preview" 
-                            className="w-full h-full object-cover rounded-md" 
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-md"
                           />
                           <Button
                             type="button"
@@ -530,7 +668,7 @@ const SuperAdminDashboard = () => {
                             className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
                             onClick={() => {
                               setImagePreview(null);
-                              editForm.setValue('imageUrl', '');
+                              editForm.setValue("imageUrl", "");
                             }}
                           >
                             <X className="h-3 w-3" />
@@ -539,7 +677,9 @@ const SuperAdminDashboard = () => {
                       ) : (
                         <>
                           <Image className="h-10 w-10 text-gray-400 mb-2" />
-                          <span className="text-xs text-gray-500">اضغط لتحميل صورة</span>
+                          <span className="text-xs text-gray-500">
+                            اضغط لتحميل صورة
+                          </span>
                         </>
                       )}
                       <Input
@@ -550,14 +690,16 @@ const SuperAdminDashboard = () => {
                         onChange={handleImageChange}
                       />
                       <label htmlFor="imageUpload">
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
                           className="mt-2"
-                          onClick={() => document.getElementById('imageUpload')?.click()}
+                          onClick={() =>
+                            document.getElementById("imageUpload")?.click()
+                          }
                         >
-                          {imagePreview ? 'تغيير الصورة' : 'إضافة صورة'}
+                          {imagePreview ? "تغيير الصورة" : "إضافة صورة"}
                         </Button>
                       </label>
                     </div>
@@ -565,11 +707,13 @@ const SuperAdminDashboard = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id="active"
                     {...editForm.register("active")}
                     checked={editForm.watch("active")}
-                    onCheckedChange={(checked) => editForm.setValue("active", !!checked)}
+                    onCheckedChange={(checked) =>
+                      editForm.setValue("active", !!checked)
+                    }
                   />
                   <label
                     htmlFor="active"
@@ -581,12 +725,14 @@ const SuperAdminDashboard = () => {
               </div>
 
               <DialogFooter className="pt-4">
-                <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   إلغاء
                 </Button>
-                <Button type="submit">
-                  حفظ التغييرات
-                </Button>
+                <Button type="submit">حفظ التغييرات</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -597,11 +743,15 @@ const SuperAdminDashboard = () => {
             <DialogHeader>
               <DialogTitle>تأكيد حذف التخصص</DialogTitle>
               <DialogDescription>
-                هل أنت متأكد من رغبتك في حذف تخصص "{currentSpecialization?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.
+                هل أنت متأكد من رغبتك في حذف تخصص "{currentSpecialization?.name}
+                "؟ هذا الإجراء لا يمكن التراجع عنه.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
                 إلغاء
               </Button>
               <Button variant="destructive" onClick={handleConfirmDelete}>
@@ -620,10 +770,14 @@ const SuperAdminDashboard = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-3 px-4 text-right font-medium">اسم العيادة</th>
+                    <th className="py-3 px-4 text-right font-medium">
+                      اسم العيادة
+                    </th>
                     <th className="py-3 px-4 text-right font-medium">التخصص</th>
                     <th className="py-3 px-4 text-right font-medium">المالك</th>
-                    <th className="py-3 px-4 text-right font-medium">تاريخ الطلب</th>
+                    <th className="py-3 px-4 text-right font-medium">
+                      تاريخ الطلب
+                    </th>
                     <th className="py-3 px-4 text-right font-medium">الحالة</th>
                   </tr>
                 </thead>
@@ -633,9 +787,14 @@ const SuperAdminDashboard = () => {
                       <td className="py-3 px-4">{clinic.name}</td>
                       <td className="py-3 px-4">{clinic.specialization}</td>
                       <td className="py-3 px-4">{clinic.owner}</td>
-                      <td className="py-3 px-4">{new Date(clinic.date).toLocaleDateString('ar-EG')}</td>
                       <td className="py-3 px-4">
-                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                        {new Date(clinic.date).toLocaleDateString("ar-EG")}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-100 text-yellow-800 border-yellow-300"
+                        >
                           قيد الانتظار
                         </Badge>
                       </td>
@@ -656,11 +815,15 @@ const SuperAdminDashboard = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500 mb-1">عدد المواعيد اليوم</div>
+                    <div className="text-sm text-gray-500 mb-1">
+                      عدد المواعيد اليوم
+                    </div>
                     <div className="text-2xl font-bold">124</div>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-500 mb-1">عدد المواعيد الأسبوع الحالي</div>
+                    <div className="text-sm text-gray-500 mb-1">
+                      عدد المواعيد الأسبوع الحالي
+                    </div>
                     <div className="text-2xl font-bold">842</div>
                   </div>
                 </div>
@@ -678,14 +841,22 @@ const SuperAdminDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-500 mb-1">إجمالي المواعيد الشهر الحالي</div>
+                  <div className="text-sm text-gray-500 mb-1">
+                    إجمالي المواعيد الشهر الحالي
+                  </div>
                   <div className="text-2xl font-bold">3,842</div>
-                  <div className="text-xs text-gray-500">زيادة بنسبة 12% عن الشهر السابق</div>
+                  <div className="text-xs text-gray-500">
+                    زيادة بنسبة 12% عن الشهر السابق
+                  </div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-500 mb-1">إجمالي المرضى الجدد</div>
+                  <div className="text-sm text-gray-500 mb-1">
+                    إجمالي المرضى الجدد
+                  </div>
                   <div className="text-2xl font-bold">267</div>
-                  <div className="text-xs text-gray-500">زيادة بنسبة 5% عن الشهر السابق</div>
+                  <div className="text-xs text-gray-500">
+                    زيادة بنسبة 5% عن الشهر السابق
+                  </div>
                 </div>
               </div>
             </CardContent>
