@@ -17,7 +17,7 @@
       "schema" : "{\"openapi\":\"3.0.3\",\"info\":{\"title\":\"Flow OpenAPI Specification\",\"description\":\"OpenAPI specification for the flow\",\"version\":\"1.0.11\"},\"servers\":[{\"url\":\"https://qa.fastn.ai/api/v1\"}],\"paths\":{\"/syncVariantAssociations\":{\"post\":{\"summary\":\"syncVariantAssociations\",\"operationId\":\"POST-syncVariantAssociations\",\"parameters\":[{\"in\":\"header\",\"name\":\"x-fastn-space-id\",\"description\":\"x-fastn-space-id Header\",\"schema\":{\"type\":\"string\",\"default\":\"3f58ea11-72b8-4e23-aa94-891c721c1ee6\"},\"required\":false},{\"in\":\"header\",\"name\":\"stage\",\"description\":\"stage Header\",\"schema\":{\"type\":\"string\",\"default\":\"DRAFT\"},\"required\":false},{\"in\":\"header\",\"name\":\"content-type\",\"description\":\"content-type Header\",\"schema\":{\"type\":\"string\",\"default\":\"application/json\"},\"required\":false},{\"in\":\"header\",\"name\":\"x-fastn-space-tenantid\",\"description\":\"x-fastn-space-tenantid Header\",\"schema\":{\"type\":\"string\",\"default\":\"\"},\"required\":false}],\"requestBody\":{\"required\":true,\"content\":{\"application/json\":{\"schema\":{\"properties\":{\"input\":{\"type\":\"object\",\"description\":\"Free form JSON\",\"title\":\"JSON\",\"properties\":{\"associations\":{\"type\":\"object\",\"title\":\"Associations\",\"properties\":{}},\"bcProductId\":{\"type\":\"integer\",\"title\":\"BC Product Id\"},\"toDeleteFirst\":{\"type\":\"boolean\",\"title\":\"toDeleteFirst\"},\"env\":{\"type\":\"string\",\"title\":\"Environment\"},\"bcVariantId\":{\"type\":\"integer\",\"title\":\"BC Variant Id\"},\"variantSku\":{\"type\":\"string\",\"title\":\"Variant SKU\"}}}},\"type\":\"object\"}}}},\"responses\":{\"200\":{\"description\":\"Success\",\"content\":{\"application/json\":{\"schema\":{\"properties\":{},\"type\":\"object\",\"description\":\"Free form JSON\",\"title\":\"JSON\"}}}}},\"security\":[{\"apiKey\":[]}]}}},\"components\":{\"securitySchemes\":{\"apiKey\":{\"type\":\"apiKey\",\"in\":\"header\",\"name\":\"x-fastn-api-key\"},\"bearerAuth\":{\"type\":\"http\",\"scheme\":\"bearer\"}}}}"
     }
   },
-  "version" : "1.0.8",
+  "version" : "1.0.9",
   "inputModel" : {
     "createdAt" : "2026-03-12T12:18:06.628552Z",
     "updatedAt" : "2026-03-12T12:18:06.626154Z",
@@ -166,9 +166,9 @@
       "required" : [ ]
     }
   },
-  "status" : "DEPLOYED",
+  "status" : "CONNECT",
   "createdAt" : "2026-03-12T12:18:07.493989Z",
-  "updatedAt" : "2026-03-18T18:13:18.912577Z",
+  "updatedAt" : "2026-03-18T18:22:16.52222Z",
   "deployedAt" : "2026-03-18T18:13:18.912577Z",
   "resolver" : {
     "id" : "syncVariantAssociations",
@@ -1889,7 +1889,7 @@
       "composite" : null,
       "loop" : null,
       "internalDatabase" : {
-        "next" : "AssociationsSuccess",
+        "next" : "Ll",
         "query" : "WITH metafield_payload AS (\n  SELECT\n    $payload${{data.steps.createAssociationsMetafield.output.data | tojson }}$payload$::jsonb AS data\n)\nINSERT INTO \"{{data.var.bcMetafieldsTable}}\"\n  (id, data, bc_date_modified, synced_at)\nSELECT\n  (metafield_payload.data->>'id')::bigint,\n  metafield_payload.data,\n  NULLIF(metafield_payload.data->>'date_modified','')::timestamptz,\n  now()\nFROM metafield_payload\nON CONFLICT (id) DO UPDATE SET\n  data             = EXCLUDED.data,\n  bc_date_modified = EXCLUDED.bc_date_modified,\n  synced_at        = EXCLUDED.synced_at;\n",
         "code" : null,
         "dbQueryParams" : [ ],
@@ -1911,7 +1911,7 @@
       "conditional" : null,
       "lambdaFunction" : null,
       "outputSchema" : null,
-      "next" : "AssociationsSuccess",
+      "next" : "Ll",
       "prevStep" : null,
       "enableDebug" : false,
       "description" : null,
@@ -2315,6 +2315,74 @@
         "errorMetricType" : null,
         "errorMetrics" : null,
         "executeOnce" : null
+      },
+      "ftp" : null,
+      "summarizationChain" : null,
+      "textClassifier" : null,
+      "warnings" : null,
+      "tenantSettings" : null
+    }, {
+      "type" : "INTERNAL_DB",
+      "id" : "Ll",
+      "actionId" : null,
+      "inline" : null,
+      "function" : null,
+      "composite" : null,
+      "loop" : null,
+      "internalDatabase" : {
+        "next" : null,
+        "query" : "ll",
+        "code" : null,
+        "dbQueryParams" : [ ],
+        "batchSize" : null,
+        "executeBatch" : null,
+        "dataList" : null,
+        "queryExecutor" : {
+          "children" : [ ],
+          "returnLiteral" : true,
+          "symbolOrIndex" : {
+            "type" : "null",
+            "value" : null
+          },
+          "version" : 2
+        }
+      },
+      "aiAction" : null,
+      "mcpClient" : null,
+      "logger" : null,
+      "downLoadFile" : null,
+      "endLoop" : null,
+      "trigger" : null,
+      "converter" : null,
+      "variables" : null,
+      "metric" : null,
+      "state" : null,
+      "conditional" : null,
+      "lambdaFunction" : null,
+      "outputSchema" : null,
+      "next" : null,
+      "prevStep" : null,
+      "enableDebug" : false,
+      "description" : null,
+      "debugBreakAfter" : 1,
+      "configuredStepSetting" : null,
+      "filter" : null,
+      "limit" : null,
+      "splitOut" : null,
+      "aggregate" : null,
+      "merge" : null,
+      "aiAgent" : null,
+      "settings" : {
+        "failureBehavior" : "FAILURE",
+        "skipStatus" : null,
+        "errorMessage" : null,
+        "stepNote" : null,
+        "enableMetrics" : false,
+        "successMetricType" : null,
+        "successMetrics" : [ ],
+        "errorMetricType" : null,
+        "errorMetrics" : [ ],
+        "executeOnce" : true
       },
       "ftp" : null,
       "summarizationChain" : null,
